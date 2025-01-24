@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
-import { Users, Award, Check, AlertCircle, Utensils, Pizza, Sandwich, CookingPot } from "lucide-react";
+import { Users, Award, Check, AlertCircle, Utensils, Pizza, Sandwich, CookingPot, Coins } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
@@ -9,11 +9,19 @@ import { CustomerAvatar } from "@/components/CustomerAvatar";
 import { RecipeSteps } from "@/components/RecipeSteps";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import type { Customer, Dish, Step } from "../types/game";
+import type { Customer, Dish, Step, GameState } from "../types/game";
 
 const GAME_DURATION = 60;
 const MAX_CUSTOMERS = 3;
-const PATIENCE_DURATION = 15;
+const BASE_PATIENCE_DURATION = 15;
+const BASE_REWARD = 10;
+
+const INITIAL_GAME_STATE: GameState = {
+  level: 1,
+  money: 0,
+  unlockedDishes: ['burger'],
+  requiredScore: 50
+};
 
 const DISH_STEPS: Record<Dish, Step[]> = {
   burger: ['bun', 'patty', 'topBun'],
@@ -41,28 +49,69 @@ const Index = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [score, setScore] = useState(0);
+  const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [currentSteps, setCurrentSteps] = useState<Step[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showGameOver, setShowGameOver] = useState(false);
 
+  const calculatePatience = useCallback(() => {
+    return Math.max(5, BASE_PATIENCE_DURATION - Math.floor(gameState.level / 2));
+  }, [gameState.level]);
+
+  const calculateReward = useCallback((patience: number) => {
+    const baseReward = BASE_REWARD * gameState.level;
+    const patienceBonus = Math.floor(patience * 2);
+    return baseReward + patienceBonus;
+  }, [gameState.level]);
+
   const generateCustomer = useCallback(() => {
-    const dishes: Dish[] = ['burger', 'hotdog', 'fries'];
-    const randomDish = dishes[Math.floor(Math.random() * dishes.length)];
+    const availableDishes = gameState.unlockedDishes;
+    const randomDish = availableDishes[Math.floor(Math.random() * availableDishes.length)];
+    const patience = calculatePatience();
+    const reward = calculateReward(patience);
+    
     const newCustomer = {
       id: Date.now(),
       dish: randomDish,
-      patience: PATIENCE_DURATION,
-      steps: DISH_STEPS[randomDish]
+      patience,
+      steps: DISH_STEPS[randomDish],
+      reward
     };
     
     toast.success('New customer arrived!', {
-      description: `Order: ${DISH_NAMES[randomDish]}`,
+      description: `Order: ${DISH_NAMES[randomDish]} (${reward}$)`,
       icon: <Users className="w-4 h-4" />,
     });
     
     return newCustomer;
-  }, []);
+  }, [gameState.unlockedDishes, calculatePatience, calculateReward]);
+
+  const checkLevelUp = useCallback(() => {
+    if (score >= gameState.requiredScore) {
+      const newLevel = gameState.level + 1;
+      const newUnlockedDishes = [...gameState.unlockedDishes];
+      
+      if (newLevel === 2 && !newUnlockedDishes.includes('hotdog')) {
+        newUnlockedDishes.push('hotdog');
+        toast.success('New recipe unlocked: Hot Dog! 🌭');
+      } else if (newLevel === 3 && !newUnlockedDishes.includes('fries')) {
+        newUnlockedDishes.push('fries');
+        toast.success('New recipe unlocked: Fries! 🍟');
+      }
+
+      setGameState(prev => ({
+        ...prev,
+        level: newLevel,
+        unlockedDishes: newUnlockedDishes,
+        requiredScore: prev.requiredScore + (50 * newLevel)
+      }));
+
+      toast.success(`Level Up! Now at level ${newLevel}`, {
+        icon: <Award className="w-4 h-4" />
+      });
+    }
+  }, [score, gameState]);
 
   useEffect(() => {
     if (!gameStarted) return;
@@ -164,13 +213,21 @@ const Index = () => {
 
     const isCorrect = JSON.stringify(currentSteps) === JSON.stringify(DISH_STEPS[selectedCustomer.dish]);
     if (isCorrect) {
+      const reward = selectedCustomer.reward;
       setScore((prev) => prev + 10);
+      setGameState(prev => ({
+        ...prev,
+        money: prev.money + reward
+      }));
       setCustomers((prev) => prev.filter((c) => c.id !== selectedCustomer.id));
       setSelectedCustomer(null);
       setCurrentSteps([]);
-      toast.success("Order served successfully!", {
-        icon: <Award className="w-4 h-4" />
+      
+      toast.success(`Order completed! Earned $${reward}`, {
+        icon: <Coins className="w-4 h-4" />
       });
+      
+      checkLevelUp();
     } else {
       toast.error("Incomplete or incorrect order!");
     }
@@ -180,6 +237,7 @@ const Index = () => {
     setGameStarted(true);
     setTimeLeft(GAME_DURATION);
     setScore(0);
+    setGameState(INITIAL_GAME_STATE);
     setCustomers([]);
     setCurrentSteps([]);
     setSelectedCustomer(null);
@@ -216,7 +274,7 @@ const Index = () => {
       {/* City Skyline */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-200/20 to-transparent" />
 
-      <GameHeader score={score} timeLeft={timeLeft} />
+      <GameHeader score={score} timeLeft={timeLeft} level={gameState.level} money={gameState.money} requiredScore={gameState.requiredScore} />
 
       <main className="pt-20 p-4 max-w-7xl mx-auto relative">
         {!gameStarted && !showGameOver && (
@@ -268,7 +326,7 @@ const Index = () => {
                         </AlertTitle>
                         <AlertDescription>
                           <Progress 
-                            value={(customer.patience / PATIENCE_DURATION) * 100} 
+                            value={(customer.patience / BASE_PATIENCE_DURATION) * 100} 
                             className={`h-2 transition-all ${
                               customer.patience < 5 ? 'bg-red-200' : ''
                             }`}
@@ -303,6 +361,8 @@ const Index = () => {
       <GameOver 
         show={showGameOver}
         score={score}
+        money={gameState.money}
+        level={gameState.level}
         onRestart={startGame}
         onOpenChange={setShowGameOver}
       />

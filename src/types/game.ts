@@ -6,4 +6,12 @@ export interface Customer {
   dish: Dish;
   patience: number;
   steps: Step[];
+  reward: number;
+}
+
+export interface GameState {
+  level: number;
+  money: number;
+  unlockedDishes: Dish[];
+  requiredScore: number;
 }
