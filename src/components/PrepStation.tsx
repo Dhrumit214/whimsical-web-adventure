@@ -18,7 +18,10 @@ export const PrepStation = ({
   stepNames 
 }: PrepStationProps) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Semi-transparent overlay to prevent background graphics from interfering */}
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-sm rounded-xl -z-10" />
+      
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
           <ChefHat className="w-5 h-5" />
@@ -26,7 +29,7 @@ export const PrepStation = ({
         </h2>
       </div>
       
-      <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg mb-6">
+      <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-md">
         <h3 className="text-sm font-medium text-gray-600 mb-4">Current Order</h3>
         {selectedCustomer ? (
           <div className="space-y-4">
@@ -54,12 +57,12 @@ export const PrepStation = ({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <Button 
           variant="outline"
           onClick={() => onStepClick('bun')}
           disabled={!selectedCustomer}
-          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
+          className="bg-white/95 hover:bg-white hover:scale-102 transition-all flex items-center gap-2 h-14 shadow-sm"
         >
           <Sandwich className="w-5 h-5 text-orange-500" />
           Add Bun
@@ -68,7 +71,7 @@ export const PrepStation = ({
           variant="outline"
           onClick={() => onStepClick('patty')}
           disabled={!selectedCustomer}
-          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
+          className="bg-white/95 hover:bg-white hover:scale-102 transition-all flex items-center gap-2 h-14 shadow-sm"
         >
           <Pizza className="w-5 h-5 text-orange-500" />
           Add Patty
@@ -77,7 +80,7 @@ export const PrepStation = ({
           variant="outline"
           onClick={() => onStepClick('topBun')}
           disabled={!selectedCustomer}
-          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
+          className="bg-white/95 hover:bg-white hover:scale-102 transition-all flex items-center gap-2 h-14 shadow-sm"
         >
           <Sandwich className="w-5 h-5 text-orange-500 rotate-180" />
           Add Top Bun
@@ -86,7 +89,7 @@ export const PrepStation = ({
           variant="outline"
           onClick={() => onStepClick('sausage')}
           disabled={!selectedCustomer}
-          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
+          className="bg-white/95 hover:bg-white hover:scale-102 transition-all flex items-center gap-2 h-14 shadow-sm"
         >
           <Beef className="w-5 h-5 text-orange-500" />
           Add Sausage
@@ -95,7 +98,7 @@ export const PrepStation = ({
           variant="outline"
           onClick={() => onStepClick('toppings')}
           disabled={!selectedCustomer}
-          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
+          className="bg-white/95 hover:bg-white hover:scale-102 transition-all flex items-center gap-2 h-14 shadow-sm"
         >
           <Utensils className="w-5 h-5 text-orange-500" />
           Add Toppings
@@ -104,7 +107,7 @@ export const PrepStation = ({
           variant="outline"
           onClick={() => onStepClick('fries')}
           disabled={!selectedCustomer}
-          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
+          className="bg-white/95 hover:bg-white hover:scale-102 transition-all flex items-center gap-2 h-14 shadow-sm"
         >
           <Pizza className="w-5 h-5 text-orange-500" />
           Add Fries
@@ -113,7 +116,7 @@ export const PrepStation = ({
           variant="outline"
           onClick={() => onStepClick('salt')}
           disabled={!selectedCustomer}
-          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
+          className="bg-white/95 hover:bg-white hover:scale-102 transition-all flex items-center gap-2 h-14 shadow-sm"
         >
           <Cherry className="w-5 h-5 text-orange-500" />
           Add Salt
@@ -121,9 +124,9 @@ export const PrepStation = ({
         <Button 
           onClick={onServe}
           variant="default"
-          className={`col-span-2 h-14 transition-all ${
+          className={`col-span-2 h-14 transition-all shadow-md ${
             selectedCustomer
-              ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:scale-105'
+              ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:scale-102'
               : 'opacity-50 cursor-not-allowed'
           }`}
           disabled={!selectedCustomer}
