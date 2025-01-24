@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
-import { Users, Award, Check, AlertCircle, ChefHat, Utensils, Pizza, Sandwich, CookingPot, Coins, Clock, Store } from "lucide-react";
+import { Users, Award, ChefHat, Pizza, CookingPot, Utensils } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
@@ -8,7 +8,7 @@ import { PrepStation } from "@/components/PrepStation";
 import { CustomerAvatar } from "@/components/CustomerAvatar";
 import { RecipeSteps } from "@/components/RecipeSteps";
 import { GameHistory } from "@/components/GameHistory";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { UpgradesShop } from "@/components/UpgradesShop";
 import { Button } from "@/components/ui/button";
@@ -115,7 +115,6 @@ const Index = () => {
   };
 
   const handleGameOver = () => {
-    // Create history entry with the current gameState values
     const historyEntry: GameHistoryEntry = {
       id: Date.now(),
       score: gameState.score,
@@ -124,10 +123,8 @@ const Index = () => {
       timestamp: new Date()
     };
     
-    // Add the new entry to the beginning of history
     setGameHistory(prev => [historyEntry, ...prev]);
 
-    // Reset game states
     setGameStarted(false);
     setShowGameOver(true);
     setTimeLeft(INITIAL_GAME_DURATION);
@@ -370,133 +367,148 @@ const Index = () => {
 
   return (
     <div className="min-h-screen transition-all relative overflow-hidden bg-warm-gradient">
-      {gameStarted && (
-        <GameHeader 
-          score={gameState.score} 
-          timeLeft={timeLeft} 
-          level={gameState.level} 
-          money={gameState.money} 
-          requiredScore={gameState.requiredScore}
-          onPurchaseTime={purchaseTime}
-        />
-      )}
+      {gameStarted ? (
+        <div>
+          <GameHeader 
+            score={gameState.score} 
+            timeLeft={timeLeft} 
+            level={gameState.level} 
+            money={gameState.money} 
+            requiredScore={gameState.requiredScore}
+            onPurchaseTime={purchaseTime}
+          />
+          <main className="pt-8 p-4 max-w-7xl mx-auto relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Customers
+                  </h2>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={purchaseTime}
+                      className={`flex items-center gap-2 ${
+                        timeLeft <= 10 ? 'animate-pulse bg-red-50' : ''
+                      }`}
+                    >
+                      Buy 60s ($50)
+                    </Button>
+                    <UpgradesShop
+                      money={gameState.money}
+                      menuItems={gameState.menuItems}
+                      onUnlockItem={handleUnlockItem}
+                    />
+                  </div>
+                </div>
+                {customers.map((customer) => (
+                  <div
+                    key={customer.id}
+                    onClick={() => handleCustomerSelect(customer)}
+                    className={`cursor-pointer transition-all transform hover:scale-102 ${
+                      selectedCustomer?.id === customer.id 
+                        ? 'ring-2 ring-primary shadow-lg scale-105' 
+                        : 'hover:shadow-md'
+                    }`}
+                  >
+                    <Alert className="relative overflow-hidden bg-white/80 backdrop-blur-sm">
+                      <div className="flex items-center gap-4">
+                        <CustomerAvatar id={customer.id} patience={customer.patience} />
+                        <div className="flex-1">
+                          <AlertTitle className="capitalize flex items-center justify-between">
+                            <span className="flex items-center gap-2">
+                              {customer.dish}
+                            </span>
+                            <span className="text-sm font-normal text-green-600 flex items-center gap-1">
+                              <Coins className="w-4 h-4" />
+                              ${customer.reward}
+                            </span>
+                          </AlertTitle>
+                          <AlertDescription>
+                            <Progress 
+                              value={(customer.patience / BASE_PATIENCE_DURATION) * 100} 
+                              className={`h-2 transition-all ${
+                                customer.patience < 5 ? 'bg-red-200' : ''
+                              }`}
+                            />
+                          </AlertDescription>
+                        </div>
+                      </div>
+                      {selectedCustomer?.id === customer.id && (
+                        <div className="mt-4 animate-fade-in">
+                          <RecipeSteps
+                            steps={gameState.menuItems.find(item => item.id === customer.dish)!.steps}
+                            completedSteps={currentSteps}
+                          />
+                        </div>
+                      )}
+                    </Alert>
+                  </div>
+                ))}
+              </div>
+              <PrepStation
+                selectedCustomer={selectedCustomer}
+                currentSteps={currentSteps}
+                onStepClick={handleStep}
+                onServe={handleServe}
+                stepNames={{ bun: 'Add Bun', patty: 'Add Patty', topBun: 'Add Top Bun', sausage: 'Add Sausage', toppings: 'Add Toppings', fries: 'Add Fries', salt: 'Add Salt' }}
+              />
+            </div>
+          </main>
+        </div>
+      ) : (
+        <main className="pt-16 p-4 max-w-7xl mx-auto">
+          {!showGameOver && (
+            <div className="flex flex-col items-center justify-center">
+              <div className="text-center space-y-4 mb-16">
+                <ChefHat className="w-16 h-16 mx-auto text-orange-500" />
+                <h1 className="text-4xl font-bold text-gray-800 mb-2">Food Truck Frenzy</h1>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  Run your food truck empire against the clock!
+                </p>
+                <Button 
+                  size="lg"
+                  onClick={startGame}
+                  className="mt-8 text-lg px-8 hover:scale-110 transition-transform bg-gradient-to-r from-orange-500 to-amber-500 shadow-lg"
+                >
+                  Start Game
+                </Button>
+              </div>
 
-      <main className="pt-28 p-4 max-w-7xl mx-auto relative">
-        {!gameStarted && !showGameOver && (
-          <>
-            <GameStart onStart={startGame} />
-            <div className="max-w-4xl mx-auto mt-16">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-                <div className="p-6 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
-                  <Utensils className="w-8 h-8 text-orange-500 mb-4" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl mb-16">
+                <div className="p-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all text-center">
+                  <Utensils className="w-8 h-8 text-orange-500 mb-4 mx-auto" />
                   <h3 className="text-lg font-semibold mb-2">Serve Customers</h3>
                   <p className="text-gray-600">Take orders and prepare delicious meals for your hungry customers!</p>
                 </div>
-                <div className="p-6 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
-                  <Pizza className="w-8 h-8 text-orange-500 mb-4" />
+                <div className="p-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all text-center">
+                  <Pizza className="w-8 h-8 text-orange-500 mb-4 mx-auto" />
                   <h3 className="text-lg font-semibold mb-2">Unlock Recipes</h3>
                   <p className="text-gray-600">Earn money to unlock new recipes and expand your menu!</p>
                 </div>
-                <div className="p-6 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
-                  <CookingPot className="w-8 h-8 text-orange-500 mb-4" />
+                <div className="p-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all text-center">
+                  <CookingPot className="w-8 h-8 text-orange-500 mb-4 mx-auto" />
                   <h3 className="text-lg font-semibold mb-2">Level Up</h3>
                   <p className="text-gray-600">Progress through levels and become the ultimate food truck master!</p>
                 </div>
               </div>
+
               <GameHistory history={gameHistory} />
             </div>
-          </>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Customers
-              </h2>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={purchaseTime}
-                  className={`flex items-center gap-2 ${
-                    timeLeft <= 10 ? 'animate-pulse bg-red-50' : ''
-                  }`}
-                >
-                  <Clock className="w-4 h-4" />
-                  Buy 60s ($50)
-                </Button>
-                <UpgradesShop
-                  money={gameState.money}
-                  menuItems={gameState.menuItems}
-                  onUnlockItem={handleUnlockItem}
-                />
-              </div>
-            </div>
-            {customers.map((customer) => (
-              <div
-                key={customer.id}
-                onClick={() => handleCustomerSelect(customer)}
-                className={`cursor-pointer transition-all transform hover:scale-102 ${
-                  selectedCustomer?.id === customer.id 
-                    ? 'ring-2 ring-primary shadow-lg scale-105' 
-                    : 'hover:shadow-md'
-                }`}
-              >
-                <Alert className="relative overflow-hidden bg-white/80 backdrop-blur-sm">
-                  <div className="flex items-center gap-4">
-                    <CustomerAvatar id={customer.id} patience={customer.patience} />
-                    <div className="flex-1">
-                      <AlertTitle className="capitalize flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          {customer.dish}
-                        </span>
-                        <span className="text-sm font-normal text-green-600 flex items-center gap-1">
-                          <Coins className="w-4 h-4" />
-                          ${customer.reward}
-                        </span>
-                      </AlertTitle>
-                      <AlertDescription>
-                        <Progress 
-                          value={(customer.patience / BASE_PATIENCE_DURATION) * 100} 
-                          className={`h-2 transition-all ${
-                            customer.patience < 5 ? 'bg-red-200' : ''
-                          }`}
-                        />
-                      </AlertDescription>
-                    </div>
-                  </div>
-                  {selectedCustomer?.id === customer.id && (
-                    <div className="mt-4 animate-fade-in">
-                      <RecipeSteps
-                        steps={gameState.menuItems.find(item => item.id === customer.dish)!.steps}
-                        completedSteps={currentSteps}
-                      />
-                    </div>
-                  )}
-                </Alert>
-              </div>
-            ))}
-          </div>
-          <PrepStation
-            selectedCustomer={selectedCustomer}
-            currentSteps={currentSteps}
-            onStepClick={handleStep}
-            onServe={handleServe}
-            stepNames={{ bun: 'Add Bun', patty: 'Add Patty', topBun: 'Add Top Bun', sausage: 'Add Sausage', toppings: 'Add Toppings', fries: 'Add Fries', salt: 'Add Salt' }}
+          )}
+          
+          <GameOver 
+            show={showGameOver}
+            score={gameState.score}
+            money={gameState.money}
+            level={gameState.level}
+            onRestart={startGame}
+            onOpenChange={setShowGameOver}
           />
-        </div>
-      </main>
-
-      <GameOver 
-        show={showGameOver}
-        score={gameState.score}
-        money={gameState.money}
-        level={gameState.level}
-        onRestart={startGame}
-        onOpenChange={setShowGameOver}
-      />
+        </main>
+      )}
     </div>
   );
 };
