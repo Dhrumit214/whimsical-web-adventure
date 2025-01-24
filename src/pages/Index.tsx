@@ -1,6 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from "sonner";
-import { Users, Award, ChefHat, Pizza, CookingPot, Utensils } from "lucide-react";
+import { 
+  Users, 
+  Award, 
+  ChefHat, 
+  Pizza, 
+  CookingPot,
+  Timer as Clock,
+  CheckCircle as Check,
+  AlertTriangle as AlertCircle,
+  Coins
+} from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
@@ -8,7 +18,7 @@ import { PrepStation } from "@/components/PrepStation";
 import { CustomerAvatar } from "@/components/CustomerAvatar";
 import { RecipeSteps } from "@/components/RecipeSteps";
 import { GameHistory } from "@/components/GameHistory";
-import { Alert } from "@/components/ui/alert";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { UpgradesShop } from "@/components/UpgradesShop";
 import { Button } from "@/components/ui/button";
