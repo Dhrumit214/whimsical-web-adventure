@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import { 
   Users, 
@@ -9,7 +9,8 @@ import {
   Timer as Clock,
   CheckCircle as Check,
   AlertTriangle as AlertCircle,
-  Coins
+  Coins,
+  Utensils
 } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
