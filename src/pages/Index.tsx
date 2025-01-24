@@ -118,6 +118,7 @@ const Index = () => {
     setGameStarted(false);
     setShowGameOver(true);
     
+    // Create history entry with the current gameState values
     const historyEntry: GameHistoryEntry = {
       id: Date.now(),
       score: gameState.score,
@@ -126,7 +127,11 @@ const Index = () => {
       timestamp: new Date()
     };
     
+    // Add the new entry to the beginning of history
     setGameHistory(prev => [historyEntry, ...prev]);
+
+    // Reset game state after recording history
+    setTimeLeft(INITIAL_GAME_DURATION);
   };
 
   const handleUnlockItem = (itemId: string) => {
