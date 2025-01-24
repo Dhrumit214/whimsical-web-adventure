@@ -130,19 +130,35 @@ const Index = () => {
   const generateCustomer = useCallback(() => {
     const availableDishes = gameState.menuItems
       .filter(item => item.isUnlocked)
-      .filter(item => shouldGenerateOrder(item.price)); // Filter based on probability
+      .filter(item => shouldGenerateOrder(item.price));
 
     if (availableDishes.length === 0) {
       // Fallback to all unlocked items if no items pass the probability check
       availableDishes.push(...gameState.menuItems.filter(item => item.isUnlocked));
     }
 
+    // Ensure we have available dishes
+    if (availableDishes.length === 0) {
+      console.error('No available dishes found');
+      return null;
+    }
+
     const randomMenuItem = availableDishes[Math.floor(Math.random() * availableDishes.length)];
+    
+    // Safety check for randomMenuItem
+    if (!randomMenuItem) {
+      console.error('Failed to select random menu item');
+      return null;
+    }
+
     const patience = calculatePatience();
+    
+    // Convert MenuItem id to Dish type
+    const dishType = randomMenuItem.id as Dish;
     
     const newCustomer: Customer = {
       id: Date.now(),
-      dish: randomMenuItem.id, // Use the id property which is of type Dish
+      dish: dishType,
       patience,
       steps: randomMenuItem.steps,
       reward: randomMenuItem.price
@@ -188,7 +204,10 @@ const Index = () => {
     const interval = setInterval(() => {
       setCustomers((prev) => {
         if (prev.length < MAX_CUSTOMERS) {
-          return [...prev, generateCustomer()];
+          const newCustomer = generateCustomer();
+          if (newCustomer) {
+            return [...prev, newCustomer];
+          }
         }
         return prev;
       });

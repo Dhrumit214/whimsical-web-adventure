@@ -2,7 +2,7 @@ export type Dish = 'burger' | 'hotdog' | 'fries' | 'premiumBurger' | 'pizza' | '
 export type Step = 'bun' | 'patty' | 'topBun' | 'sausage' | 'toppings' | 'fries' | 'salt';
 
 export interface MenuItem {
-  id: Dish;
+  id: string;
   name: string;
   price: number;
   unlockCost: number;
