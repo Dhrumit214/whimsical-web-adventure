@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
-import { Users, Award, Check, AlertCircle, Utensils, Pizza, Sandwich, CookingPot, Coins, DollarSign, Clock } from "lucide-react";
+import { Users, Award, Check, AlertCircle, ChefHat, Utensils, Pizza, Sandwich, CookingPot } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
 import { PrepStation } from "@/components/PrepStation";
 import { CustomerAvatar } from "@/components/CustomerAvatar";
 import { RecipeSteps } from "@/components/RecipeSteps";
+import { GameHistory } from "@/components/GameHistory";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { UpgradesShop } from "@/components/UpgradesShop";
@@ -17,6 +18,14 @@ const TIME_PURCHASE_COST = 50;
 const TIME_PURCHASE_AMOUNT = 60;
 const MAX_CUSTOMERS = 3;
 const BASE_PATIENCE_DURATION = 15;
+
+interface GameHistoryEntry {
+  id: number;
+  score: number;
+  money: number;
+  level: number;
+  timestamp: Date;
+}
 
 const INITIAL_MENU_ITEMS: MenuItem[] = [
   {
@@ -92,6 +101,7 @@ const Index = () => {
   const [currentSteps, setCurrentSteps] = useState<Step[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showGameOver, setShowGameOver] = useState(false);
+  const [gameHistory, setGameHistory] = useState<GameHistoryEntry[]>([]);
 
   const purchaseTime = () => {
     if (gameState.money >= TIME_PURCHASE_COST) {
@@ -167,8 +177,7 @@ const Index = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          setGameStarted(false);
-          setShowGameOver(true);
+          handleGameOver();
           return 0;
         }
         return prev - 1;
@@ -281,6 +290,25 @@ const Index = () => {
     }
   };
 
+  const handleGameOver = () => {
+    setGameHistory(prev => {
+      const newHistory = [
+        {
+          id: Date.now(),
+          score,
+          money: gameState.money,
+          level: gameState.level,
+          timestamp: new Date()
+        },
+        ...prev
+      ].slice(0, 10); // Keep only last 10 games
+      return newHistory;
+    });
+    
+    setShowGameOver(true);
+    setGameStarted(false);
+  };
+
   const startGame = () => {
     setGameStarted(true);
     setTimeLeft(INITIAL_GAME_DURATION);
@@ -328,7 +356,29 @@ const Index = () => {
 
       <main className="pt-20 p-4 max-w-7xl mx-auto relative">
         {!gameStarted && !showGameOver && (
-          <GameStart onStart={startGame} />
+          <>
+            <GameStart onStart={startGame} />
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+                <div className="p-6 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+                  <Utensils className="w-8 h-8 text-orange-500 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Serve Customers</h3>
+                  <p className="text-gray-600">Take orders and prepare delicious meals for your hungry customers!</p>
+                </div>
+                <div className="p-6 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+                  <Pizza className="w-8 h-8 text-orange-500 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Unlock Recipes</h3>
+                  <p className="text-gray-600">Earn money to unlock new recipes and expand your menu!</p>
+                </div>
+                <div className="p-6 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+                  <CookingPot className="w-8 h-8 text-orange-500 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Level Up</h3>
+                  <p className="text-gray-600">Progress through levels and become the ultimate food truck master!</p>
+                </div>
+              </div>
+              <GameHistory history={gameHistory} />
+            </div>
+          </>
         )}
 
         {gameStarted && (
