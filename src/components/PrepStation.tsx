@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Utensils, Check, AlertCircle } from "lucide-react";
+import { Utensils, Check, AlertCircle, Pizza, Sandwich, CookingPot } from "lucide-react";
 import { Step, Customer } from "../types/game";
 
 interface PrepStationProps {
@@ -29,7 +29,7 @@ export const PrepStation = ({
         {selectedCustomer ? (
           <div className="space-y-4">
             <div className="text-lg font-medium text-gray-800 flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-orange-500" />
+              <CookingPot className="w-5 h-5 text-orange-500" />
               Preparing: {selectedCustomer.dish}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -57,16 +57,18 @@ export const PrepStation = ({
           variant="outline"
           onClick={() => onStepClick('bun')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform"
+          className="hover:scale-105 transition-transform flex items-center gap-2"
         >
+          <Sandwich className="w-4 h-4" />
           Add Bun
         </Button>
         <Button 
           variant="outline"
           onClick={() => onStepClick('patty')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform"
+          className="hover:scale-105 transition-transform flex items-center gap-2"
         >
+          <Pizza className="w-4 h-4" />
           Add Patty
         </Button>
         <Button 

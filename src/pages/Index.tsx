@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
-import { Users, Award, Check, AlertCircle } from "lucide-react";
+import { Users, Award, Check, AlertCircle, Utensils, Pizza, Sandwich, CookingPot } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
@@ -187,12 +187,20 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen transition-all relative overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen transition-all relative overflow-hidden bg-warm-gradient">
       {/* Ambient Background Elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
       
       {/* Food Truck Illustration */}
-      <div className="absolute top-20 right-0 w-64 h-64 bg-food-truck opacity-10 transform rotate-12" />
+      <div className="absolute top-20 right-10 w-96 h-64 bg-white/90 rounded-xl shadow-2xl transform -rotate-3 overflow-hidden">
+        <div className="absolute inset-0 bg-food-truck opacity-20" />
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-orange-500/20" />
+        <div className="absolute top-4 left-4 flex space-x-4">
+          <CookingPot className="w-8 h-8 text-orange-500 animate-bounce" />
+          <Pizza className="w-8 h-8 text-orange-500 animate-pulse" />
+          <Sandwich className="w-8 h-8 text-orange-500 animate-bounce" />
+        </div>
+      </div>
       
       {/* Floating Clouds */}
       <div className="absolute top-10 left-10 w-20 h-10 bg-white rounded-full opacity-20 animate-float" />
@@ -210,7 +218,7 @@ const Index = () => {
 
       <GameHeader score={score} timeLeft={timeLeft} />
 
-      <main className="pt-20 p-4 max-w-7xl mx-auto">
+      <main className="pt-20 p-4 max-w-7xl mx-auto relative">
         {!gameStarted && !showGameOver && (
           <GameStart onStart={startGame} />
         )}
@@ -222,6 +230,25 @@ const Index = () => {
                 <Users className="w-5 h-5" />
                 Customers
               </h2>
+              
+              {/* Ingredient Icons Display */}
+              <div className="mb-6 p-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg">
+                <div className="flex justify-center space-x-4">
+                  <div className="flex flex-col items-center">
+                    <Pizza className="w-8 h-8 text-orange-500" />
+                    <span className="text-sm mt-1">Patty</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Sandwich className="w-8 h-8 text-orange-500" />
+                    <span className="text-sm mt-1">Bun</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Utensils className="w-8 h-8 text-orange-500" />
+                    <span className="text-sm mt-1">Toppings</span>
+                  </div>
+                </div>
+              </div>
+
               {customers.map((customer) => (
                 <div
                   key={customer.id}
