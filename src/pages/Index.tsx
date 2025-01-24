@@ -137,20 +137,19 @@ const Index = () => {
       availableDishes.push(...gameState.menuItems.filter(item => item.isUnlocked));
     }
 
-    const randomDish = availableDishes[Math.floor(Math.random() * availableDishes.length)];
-    const menuItem = gameState.menuItems.find(item => item.id === randomDish)!;
+    const randomMenuItem = availableDishes[Math.floor(Math.random() * availableDishes.length)];
     const patience = calculatePatience();
     
-    const newCustomer = {
+    const newCustomer: Customer = {
       id: Date.now(),
-      dish: randomDish,
+      dish: randomMenuItem.id, // Use the id property which is of type Dish
       patience,
-      steps: menuItem.steps,
-      reward: menuItem.price
+      steps: randomMenuItem.steps,
+      reward: randomMenuItem.price
     };
     
     toast.success('New customer arrived!', {
-      description: `Order: ${menuItem.name} ($${menuItem.price})`,
+      description: `Order: ${randomMenuItem.name} ($${randomMenuItem.price})`,
       icon: <Users className="w-4 h-4" />,
     });
     
