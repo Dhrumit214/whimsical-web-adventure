@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
-import { Users, Award, Check, AlertCircle, Utensils, Pizza, Sandwich, CookingPot, Coins, DollarSign } from "lucide-react";
+import { Users, Award, Check, AlertCircle, Utensils, Pizza, Sandwich, CookingPot, Coins, DollarSign, Clock } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
@@ -12,10 +12,9 @@ import { Progress } from "@/components/ui/progress";
 import { UpgradesShop } from "@/components/UpgradesShop";
 import type { Customer, Dish, Step, GameState, MenuItem } from "../types/game";
 
-const GAME_DURATION = 60;
-const MAX_CUSTOMERS = 3;
-const BASE_PATIENCE_DURATION = 15;
-const BASE_REWARD = 10;
+const INITIAL_GAME_DURATION = 120;
+const TIME_PURCHASE_COST = 50;
+const TIME_PURCHASE_AMOUNT = 60;
 
 const INITIAL_MENU_ITEMS: MenuItem[] = [
   {
@@ -84,13 +83,26 @@ const INITIAL_GAME_STATE: GameState = {
 
 const Index = () => {
   const [gameStarted, setGameStarted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
+  const [timeLeft, setTimeLeft] = useState(INITIAL_GAME_DURATION);
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [currentSteps, setCurrentSteps] = useState<Step[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showGameOver, setShowGameOver] = useState(false);
+
+  const purchaseTime = () => {
+    if (gameState.money >= TIME_PURCHASE_COST) {
+      setTimeLeft(prev => prev + TIME_PURCHASE_AMOUNT);
+      setGameState(prev => ({
+        ...prev,
+        money: prev.money - TIME_PURCHASE_COST
+      }));
+      toast.success(`Purchased ${TIME_PURCHASE_AMOUNT} seconds for $${TIME_PURCHASE_COST}!`);
+    } else {
+      toast.error(`Not enough money! Need $${TIME_PURCHASE_COST - gameState.money} more.`);
+    }
+  };
 
   const calculatePatience = useCallback(() => {
     return Math.max(5, BASE_PATIENCE_DURATION - Math.floor(gameState.level / 2));
@@ -269,7 +281,7 @@ const Index = () => {
 
   const startGame = () => {
     setGameStarted(true);
-    setTimeLeft(GAME_DURATION);
+    setTimeLeft(INITIAL_GAME_DURATION);
     setScore(0);
     setGameState(INITIAL_GAME_STATE);
     setCustomers([]);
@@ -308,7 +320,8 @@ const Index = () => {
         timeLeft={timeLeft} 
         level={gameState.level} 
         money={gameState.money} 
-        requiredScore={gameState.requiredScore} 
+        requiredScore={gameState.requiredScore}
+        onPurchaseTime={purchaseTime}
       />
 
       <main className="pt-20 p-4 max-w-7xl mx-auto relative">

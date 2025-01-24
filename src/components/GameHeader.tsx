@@ -1,5 +1,6 @@
-import { Timer, Trophy, Coins, GaugeCircle } from "lucide-react";
+import { Timer, Trophy, Coins, GaugeCircle, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 interface GameHeaderProps {
   score: number;
@@ -7,9 +8,17 @@ interface GameHeaderProps {
   level: number;
   money: number;
   requiredScore: number;
+  onPurchaseTime: () => void;
 }
 
-export const GameHeader = ({ score, timeLeft, level, money, requiredScore }: GameHeaderProps) => {
+export const GameHeader = ({ 
+  score, 
+  timeLeft, 
+  level, 
+  money, 
+  requiredScore,
+  onPurchaseTime 
+}: GameHeaderProps) => {
   const progressPercentage = (score / requiredScore) * 100;
   
   return (
@@ -31,9 +40,20 @@ export const GameHeader = ({ score, timeLeft, level, money, requiredScore }: Gam
               <GaugeCircle className="w-6 h-6 text-purple-500" />
               <span className="text-xl font-bold text-gray-800">Level {level}</span>
             </div>
-            <div className="flex items-center gap-2 hover:scale-105 transition-transform">
-              <Timer className="w-6 h-6 text-blue-500 animate-pulse" />
-              <span className="text-xl font-bold text-gray-800">{timeLeft}s</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 hover:scale-105 transition-transform">
+                <Timer className="w-6 h-6 text-blue-500 animate-pulse" />
+                <span className="text-xl font-bold text-gray-800">{timeLeft}s</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPurchaseTime}
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                Buy 60s ($50)
+              </Button>
             </div>
           </div>
         </div>
