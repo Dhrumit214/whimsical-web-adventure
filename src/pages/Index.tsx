@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Timer, Utensils, ChefHat, Trophy, Check, AlertCircle, Clock, Star, Users, Award } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CustomerAvatar } from "@/components/CustomerAvatar";
+import { RecipeSteps } from "@/components/RecipeSteps";
 
 type Dish = 'burger' | 'hotdog' | 'fries';
 type Step = 'bun' | 'patty' | 'topBun' | 'sausage' | 'toppings' | 'fries' | 'salt';
@@ -193,14 +194,20 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] transition-all">
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm p-4 z-10 animate-fade-in">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 transition-all relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
+      
+      {/* Food Truck Illustration */}
+      <div className="absolute top-20 right-0 w-64 h-64 bg-food-truck opacity-10 transform rotate-12" />
+
+      <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm p-4 z-10 animate-fade-in">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2 hover-scale">
-            <Trophy className="w-6 h-6 text-yellow-500" />
+          <div className="flex items-center gap-2 hover:scale-105 transition-transform">
+            <Trophy className="w-6 h-6 text-yellow-500 animate-bounce" />
             <span className="text-xl font-bold text-gray-800">Score: {score}</span>
           </div>
-          <div className="flex items-center gap-2 hover-scale">
+          <div className="flex items-center gap-2 hover:scale-105 transition-transform">
             <Timer className="w-6 h-6 text-blue-500 animate-pulse" />
             <span className="text-xl font-bold text-gray-800">{timeLeft}s</span>
           </div>
@@ -220,7 +227,7 @@ const Index = () => {
             <Button 
               size="lg"
               onClick={startGame}
-              className="text-lg px-8 hover:scale-105 transition-transform"
+              className="text-lg px-8 hover:scale-110 transition-transform bg-gradient-to-r from-orange-500 to-amber-500 shadow-lg"
             >
               Start Game
             </Button>
@@ -240,18 +247,13 @@ const Index = () => {
                   onClick={() => handleCustomerSelect(customer)}
                   className={`cursor-pointer transition-all transform hover:scale-102 ${
                     selectedCustomer?.id === customer.id 
-                      ? 'ring-2 ring-primary shadow-lg' 
+                      ? 'ring-2 ring-primary shadow-lg scale-105' 
                       : 'hover:shadow-md'
                   }`}
                 >
-                  <Alert className="relative overflow-hidden">
+                  <Alert className="relative overflow-hidden bg-white/80 backdrop-blur-sm">
                     <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarImage src={`https://api.dicebear.com/7.x/personas/svg?seed=${customer.id}`} />
-                        <AvatarFallback>
-                          <Utensils className="w-4 h-4" />
-                        </AvatarFallback>
-                      </Avatar>
+                      <CustomerAvatar id={customer.id} patience={customer.patience} />
                       <div className="flex-1">
                         <AlertTitle className="capitalize flex items-center gap-2">
                           {DISH_NAMES[customer.dish]}
@@ -272,31 +274,18 @@ const Index = () => {
                               {customer.patience}s
                             </span>
                           </div>
-                          {selectedCustomer?.id === customer.id && (
-                            <div className="mt-2 text-sm animate-fade-in">
-                              <div className="font-medium mb-1">Recipe Steps:</div>
-                              {DISH_STEPS[customer.dish].map((step, index) => (
-                                <div 
-                                  key={step}
-                                  className={`flex items-center gap-2 ${
-                                    currentSteps[index] === step 
-                                      ? 'text-green-500' 
-                                      : 'text-gray-600'
-                                  }`}
-                                >
-                                  {currentSteps[index] === step ? (
-                                    <Check className="w-4 h-4" />
-                                  ) : (
-                                    <span className="w-4 h-4 inline-block" />
-                                  )}
-                                  {STEP_NAMES[step]}
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </AlertDescription>
                       </div>
                     </div>
+                    {/* Recipe Steps for Selected Customer */}
+                    {selectedCustomer?.id === customer.id && (
+                      <div className="mt-4 animate-fade-in">
+                        <RecipeSteps
+                          steps={DISH_STEPS[customer.dish].map(step => STEP_NAMES[step])}
+                          completedSteps={currentSteps.map(step => STEP_NAMES[step])}
+                        />
+                      </div>
+                    )}
                   </Alert>
                 </div>
               ))}
@@ -308,26 +297,29 @@ const Index = () => {
                 Prep Station
               </h2>
               
-              <div className="bg-white p-4 rounded-lg shadow-sm mb-6 animate-fade-in">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Current Order</h3>
+              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg mb-6 animate-fade-in">
+                <h3 className="text-sm font-medium text-gray-600 mb-4">Current Order</h3>
                 {selectedCustomer ? (
-                  <div className="space-y-2">
-                    <div className="text-sm text-gray-800">
+                  <div className="space-y-4">
+                    <div className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                      <Utensils className="w-5 h-5 text-orange-500" />
                       Preparing: {DISH_NAMES[selectedCustomer.dish]}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {currentSteps.map((step, index) => (
                         <span 
                           key={index}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 animate-scale-in"
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 animate-scale-in"
                         >
+                          <Check className="w-4 h-4 mr-1" />
                           {STEP_NAMES[step]}
                         </span>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-sm text-gray-500 italic">
+                  <div className="text-sm text-gray-500 italic flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
                     Select a customer to start preparing their order
                   </div>
                 )}
@@ -386,7 +378,11 @@ const Index = () => {
                 <Button 
                   onClick={handleServe}
                   variant="default"
-                  className="col-span-2 bg-green-500 hover:bg-green-600 transition-colors animate-fade-in"
+                  className={`col-span-2 transition-all ${
+                    selectedCustomer
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:scale-105'
+                      : 'opacity-50 cursor-not-allowed'
+                  }`}
                   disabled={!selectedCustomer}
                 >
                   <Check className="w-5 h-5" />
@@ -401,19 +397,19 @@ const Index = () => {
       <Dialog open={showGameOver} onOpenChange={setShowGameOver}>
         <DialogContent className="sm:max-w-md animate-scale-in">
           <DialogHeader>
-            <DialogTitle className="text-center">Game Over!</DialogTitle>
+            <DialogTitle className="text-center text-2xl font-bold">Game Over!</DialogTitle>
           </DialogHeader>
-          <div className="text-center py-4">
-            <Trophy className="w-12 h-12 mx-auto text-yellow-500 mb-4 animate-bounce" />
-            <p className="text-2xl font-bold mb-2">Final Score: {score}</p>
-            <p className="text-gray-600">
+          <div className="text-center py-8">
+            <Trophy className="w-16 h-16 mx-auto text-yellow-500 mb-6 animate-bounce" />
+            <p className="text-3xl font-bold mb-2 text-gray-800">Final Score: {score}</p>
+            <p className="text-gray-600 text-lg">
               You served {score / 10} orders successfully!
             </p>
           </div>
           <DialogFooter>
             <Button 
               onClick={startGame} 
-              className="w-full hover:scale-105 transition-transform"
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:scale-105 transition-transform text-lg font-medium"
             >
               Play Again
             </Button>
