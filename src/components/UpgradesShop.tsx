@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Lock, Unlock, DollarSign, Timer, ArrowRight } from "lucide-react";
+import { Lock, Unlock, DollarSign, Timer, ArrowRight, Store } from "lucide-react";
 import { MenuItem } from "@/types/game";
 import { toast } from "sonner";
 
@@ -38,8 +38,11 @@ export const UpgradesShop = ({ money, menuItems, onUnlockItem }: UpgradesShopPro
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <DollarSign className="w-4 h-4" />
+        <Button 
+          variant="default"
+          className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 animate-pulse"
+        >
+          <Store className="w-4 h-4" />
           Upgrades Shop
         </Button>
       </DialogTrigger>

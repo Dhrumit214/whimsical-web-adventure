@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
-import { Users, Award, Check, AlertCircle, ChefHat, Utensils, Pizza, Sandwich, CookingPot, Coins } from "lucide-react";
+import { Users, Award, Check, AlertCircle, ChefHat, Utensils, Pizza, Sandwich, CookingPot, Coins, Clock, Store } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
@@ -11,6 +11,7 @@ import { GameHistory } from "@/components/GameHistory";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { UpgradesShop } from "@/components/UpgradesShop";
+import { Button } from "@/components/ui/button";
 import type { Customer, Dish, Step, GameState, MenuItem } from "../types/game";
 
 const INITIAL_GAME_DURATION = 120;
@@ -120,10 +121,22 @@ const Index = () => {
     return Math.max(5, BASE_PATIENCE_DURATION - Math.floor(gameState.level / 2));
   }, [gameState.level]);
 
+  const shouldGenerateOrder = useCallback((itemPrice: number) => {
+    const levelFactor = gameState.level * 5; // As level increases, this factor gets bigger
+    const probability = Math.min(100, Math.max(0, 100 - (levelFactor / itemPrice))); 
+    return Math.random() * 100 <= probability;
+  }, [gameState.level]);
+
   const generateCustomer = useCallback(() => {
     const availableDishes = gameState.menuItems
       .filter(item => item.isUnlocked)
-      .map(item => item.id);
+      .filter(item => shouldGenerateOrder(item.price)); // Filter based on probability
+
+    if (availableDishes.length === 0) {
+      // Fallback to all unlocked items if no items pass the probability check
+      availableDishes.push(...gameState.menuItems.filter(item => item.isUnlocked));
+    }
+
     const randomDish = availableDishes[Math.floor(Math.random() * availableDishes.length)];
     const menuItem = gameState.menuItems.find(item => item.id === randomDish)!;
     const patience = calculatePatience();
@@ -142,33 +155,16 @@ const Index = () => {
     });
     
     return newCustomer;
-  }, [gameState.menuItems, calculatePatience]);
+  }, [gameState.menuItems, calculatePatience, shouldGenerateOrder]);
 
-  const checkLevelUp = useCallback(() => {
-    if (score >= gameState.requiredScore) {
-      const newLevel = gameState.level + 1;
-      const newUnlockedDishes = [...gameState.unlockedDishes];
-      
-      if (newLevel === 2 && !newUnlockedDishes.includes('hotdog')) {
-        newUnlockedDishes.push('hotdog');
-        toast.success('New recipe unlocked: Hot Dog! 🌭');
-      } else if (newLevel === 3 && !newUnlockedDishes.includes('fries')) {
-        newUnlockedDishes.push('fries');
-        toast.success('New recipe unlocked: Fries! 🍟');
-      }
-
-      setGameState(prev => ({
-        ...prev,
-        level: newLevel,
-        unlockedDishes: newUnlockedDishes,
-        requiredScore: prev.requiredScore + (50 * newLevel)
-      }));
-
-      toast.success(`Level Up! Now at level ${newLevel}`, {
-        icon: <Award className="w-4 h-4" />
+  useEffect(() => {
+    if (gameStarted && timeLeft <= 10) {
+      toast.warning(`Only ${timeLeft} seconds left!`, {
+        description: "Hurry up! Time is running out!",
+        icon: <Clock className="w-4 h-4 text-red-500 animate-pulse" />,
       });
     }
-  }, [score, gameState]);
+  }, [timeLeft, gameStarted]);
 
   useEffect(() => {
     if (!gameStarted) return;
@@ -290,6 +286,32 @@ const Index = () => {
     }
   };
 
+  const checkLevelUp = useCallback(() => {
+    if (score >= gameState.requiredScore) {
+      const newLevel = gameState.level + 1;
+      const newUnlockedDishes = [...gameState.unlockedDishes];
+      
+      if (newLevel === 2 && !newUnlockedDishes.includes('hotdog')) {
+        newUnlockedDishes.push('hotdog');
+        toast.success('New recipe unlocked: Hot Dog! 🌭');
+      } else if (newLevel === 3 && !newUnlockedDishes.includes('fries')) {
+        newUnlockedDishes.push('fries');
+        toast.success('New recipe unlocked: Fries! 🍟');
+      }
+
+      setGameState(prev => ({
+        ...prev,
+        level: newLevel,
+        unlockedDishes: newUnlockedDishes,
+        requiredScore: prev.requiredScore + (50 * newLevel)
+      }));
+
+      toast.success(`Level Up! Now at level ${newLevel}`, {
+        icon: <Award className="w-4 h-4" />
+      });
+    }
+  }, [score, gameState]);
+
   const handleGameOver = () => {
     setGameHistory(prev => {
       const newHistory = [
@@ -384,16 +406,29 @@ const Index = () => {
         {gameStarted && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                   <Users className="w-5 h-5" />
                   Customers
                 </h2>
-                <UpgradesShop
-                  money={gameState.money}
-                  menuItems={gameState.menuItems}
-                  onUnlockItem={handleUnlockItem}
-                />
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={purchaseTime}
+                    className={`flex items-center gap-2 ${
+                      timeLeft <= 10 ? 'animate-pulse bg-red-50' : ''
+                    }`}
+                  >
+                    <Clock className="w-4 h-4" />
+                    Buy 60s ($50)
+                  </Button>
+                  <UpgradesShop
+                    money={gameState.money}
+                    menuItems={gameState.menuItems}
+                    onUnlockItem={handleUnlockItem}
+                  />
+                </div>
               </div>
               
               {customers.map((customer) => (
@@ -466,4 +501,3 @@ const Index = () => {
 };
 
 export default Index;
-
