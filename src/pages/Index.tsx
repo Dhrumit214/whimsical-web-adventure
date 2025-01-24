@@ -104,6 +104,78 @@ const Index = () => {
   const [showGameOver, setShowGameOver] = useState(false);
   const [gameHistory, setGameHistory] = useState<GameHistoryEntry[]>([]);
 
+  const startGame = () => {
+    setGameStarted(true);
+    setTimeLeft(INITIAL_GAME_DURATION);
+    setScore(0);
+    setGameState(INITIAL_GAME_STATE);
+    setCustomers([]);
+    setCurrentSteps([]);
+    setSelectedCustomer(null);
+    setShowGameOver(false);
+  };
+
+  const handleGameOver = () => {
+    setGameStarted(false);
+    setShowGameOver(true);
+    
+    const historyEntry: GameHistoryEntry = {
+      id: Date.now(),
+      score,
+      money: gameState.money,
+      level: gameState.level,
+      timestamp: new Date()
+    };
+    
+    setGameHistory(prev => [historyEntry, ...prev]);
+  };
+
+  const handleUnlockItem = (itemId: string) => {
+    if (gameState.money >= gameState.menuItems.find(item => item.id === itemId)?.unlockCost!) {
+      setGameState(prev => ({
+        ...prev,
+        money: prev.money - prev.menuItems.find(item => item.id === itemId)?.unlockCost!,
+        menuItems: prev.menuItems.map(item =>
+          item.id === itemId ? { ...item, isUnlocked: true } : item
+        ),
+        unlockedDishes: [...prev.unlockedDishes, itemId as Dish]
+      }));
+    }
+  };
+
+  const handleServe = () => {
+    if (!selectedCustomer) return;
+
+    const menuItem = gameState.menuItems.find(item => item.id === selectedCustomer.dish);
+    if (!menuItem) return;
+
+    const expectedSteps = menuItem.steps;
+    const isCorrectOrder = currentSteps.length === expectedSteps.length &&
+      currentSteps.every((step, index) => step === expectedSteps[index]);
+
+    if (isCorrectOrder) {
+      setScore(prev => prev + 10);
+      setGameState(prev => ({
+        ...prev,
+        money: prev.money + selectedCustomer.reward,
+        level: prev.score >= prev.requiredScore ? prev.level + 1 : prev.level,
+        requiredScore: prev.score >= prev.requiredScore ? prev.requiredScore * 1.5 : prev.requiredScore
+      }));
+
+      setCustomers(prev => prev.filter(c => c.id !== selectedCustomer.id));
+      setSelectedCustomer(null);
+      setCurrentSteps([]);
+
+      toast.success(`Order completed! +$${selectedCustomer.reward}`, {
+        description: "Great job! Keep up the good work!"
+      });
+    } else {
+      toast.error("Order is incorrect!", {
+        description: "Check the recipe steps and try again."
+      });
+    }
+  };
+
   const purchaseTime = () => {
     if (gameState.money >= TIME_PURCHASE_COST) {
       setTimeLeft(prev => prev + TIME_PURCHASE_AMOUNT);
@@ -122,7 +194,7 @@ const Index = () => {
   }, [gameState.level]);
 
   const shouldGenerateOrder = useCallback((itemPrice: number) => {
-    const levelFactor = gameState.level * 5; // As level increases, this factor gets bigger
+    const levelFactor = gameState.level * 5;
     const probability = Math.min(100, Math.max(0, 100 - (levelFactor / itemPrice))); 
     return Math.random() * 100 <= probability;
   }, [gameState.level]);
@@ -133,11 +205,9 @@ const Index = () => {
       .filter(item => shouldGenerateOrder(item.price));
 
     if (availableDishes.length === 0) {
-      // Fallback to all unlocked items if no items pass the probability check
       availableDishes.push(...gameState.menuItems.filter(item => item.isUnlocked));
     }
 
-    // Ensure we have available dishes
     if (availableDishes.length === 0) {
       console.error('No available dishes found');
       return null;
@@ -145,7 +215,6 @@ const Index = () => {
 
     const randomMenuItem = availableDishes[Math.floor(Math.random() * availableDishes.length)];
     
-    // Safety check for randomMenuItem
     if (!randomMenuItem) {
       console.error('Failed to select random menu item');
       return null;
@@ -153,7 +222,6 @@ const Index = () => {
 
     const patience = calculatePatience();
     
-    // Convert MenuItem id to Dish type
     const dishType = randomMenuItem.id as Dish;
     
     const newCustomer: Customer = {
@@ -271,7 +339,6 @@ const Index = () => {
         icon: <Check className="w-4 h-4" />
       });
     } else {
-      // Add shake animation and red background
       buttonElement?.classList.add('animate-shake', 'bg-red-100');
       setTimeout(() => {
         buttonElement?.classList.remove('animate-shake', 'bg-red-100');
@@ -283,7 +350,6 @@ const Index = () => {
     }
   };
 
-  // Reset game state when showing game over
   useEffect(() => {
     if (showGameOver) {
       setScore(0);
@@ -303,11 +369,11 @@ const Index = () => {
         onPurchaseTime={purchaseTime}
       />
 
-      <main className="pt-28 p-4 max-w-7xl mx-auto relative"> {/* Increased top padding */}
+      <main className="pt-28 p-4 max-w-7xl mx-auto relative">
         {!gameStarted && !showGameOver && (
           <>
             <GameStart onStart={startGame} />
-            <div className="max-w-4xl mx-auto -mt-8"> {/* Negative margin to reduce space */}
+            <div className="max-w-4xl mx-auto -mt-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                 <div className="p-6 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
                   <Utensils className="w-8 h-8 text-orange-500 mb-4" />
