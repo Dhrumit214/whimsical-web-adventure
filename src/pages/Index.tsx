@@ -129,19 +129,6 @@ const Index = () => {
     setGameHistory(prev => [historyEntry, ...prev]);
   };
 
-  const handleUnlockItem = (itemId: string) => {
-    if (gameState.money >= gameState.menuItems.find(item => item.id === itemId)?.unlockCost!) {
-      setGameState(prev => ({
-        ...prev,
-        money: prev.money - prev.menuItems.find(item => item.id === itemId)?.unlockCost!,
-        menuItems: prev.menuItems.map(item =>
-          item.id === itemId ? { ...item, isUnlocked: true } : item
-        ),
-        unlockedDishes: [...prev.unlockedDishes, itemId as Dish]
-      }));
-    }
-  };
-
   const handleServe = () => {
     if (!selectedCustomer) return;
 
@@ -154,12 +141,16 @@ const Index = () => {
 
     if (isCorrectOrder) {
       const newScore = gameState.score + 10;
+      const newMoney = gameState.money + selectedCustomer.reward;
+      const newLevel = newScore >= gameState.requiredScore ? gameState.level + 1 : gameState.level;
+      const newRequiredScore = newScore >= gameState.requiredScore ? gameState.requiredScore * 1.5 : gameState.requiredScore;
+
       setGameState(prev => ({
         ...prev,
         score: newScore,
-        money: prev.money + selectedCustomer.reward,
-        level: newScore >= prev.requiredScore ? prev.level + 1 : prev.level,
-        requiredScore: newScore >= prev.requiredScore ? prev.requiredScore * 1.5 : prev.requiredScore
+        money: newMoney,
+        level: newLevel,
+        requiredScore: newRequiredScore
       }));
 
       setCustomers(prev => prev.filter(c => c.id !== selectedCustomer.id));
@@ -352,7 +343,6 @@ const Index = () => {
 
   useEffect(() => {
     if (showGameOver) {
-      setGameState(INITIAL_GAME_STATE);
       setTimeLeft(INITIAL_GAME_DURATION);
     }
   }, [showGameOver]);
