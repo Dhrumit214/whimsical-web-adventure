@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Utensils, Check, AlertCircle, Pizza, Sandwich, CookingPot } from "lucide-react";
+import { Utensils, Check, AlertCircle, Pizza, Sandwich, CookingPot, French, Salt, ChefHat } from "lucide-react";
 import { Step, Customer } from "../types/game";
 
 interface PrepStationProps {
@@ -18,25 +18,27 @@ export const PrepStation = ({
   stepNames 
 }: PrepStationProps) => {
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-        <Utensils className="w-5 h-5" />
-        Prep Station
-      </h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <ChefHat className="w-5 h-5" />
+          Prep Station
+        </h2>
+      </div>
       
-      <div className="bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg mb-6 animate-fade-in">
+      <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-lg mb-6">
         <h3 className="text-sm font-medium text-gray-600 mb-4">Current Order</h3>
         {selectedCustomer ? (
           <div className="space-y-4">
             <div className="text-lg font-medium text-gray-800 flex items-center gap-2">
               <CookingPot className="w-5 h-5 text-orange-500" />
-              Preparing: {selectedCustomer.dish}
+              <span>Preparing: {selectedCustomer.dish}</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {currentSteps.map((step, index) => (
                 <span 
                   key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 animate-scale-in"
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
                 >
                   <Check className="w-4 h-4 mr-1" />
                   {stepNames[step]}
@@ -57,64 +59,69 @@ export const PrepStation = ({
           variant="outline"
           onClick={() => onStepClick('bun')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform flex items-center gap-2"
+          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
         >
-          <Sandwich className="w-4 h-4" />
+          <Sandwich className="w-5 h-5 text-orange-500" />
           Add Bun
         </Button>
         <Button 
           variant="outline"
           onClick={() => onStepClick('patty')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform flex items-center gap-2"
+          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
         >
-          <Pizza className="w-4 h-4" />
+          <Pizza className="w-5 h-5 text-orange-500" />
           Add Patty
         </Button>
         <Button 
           variant="outline"
           onClick={() => onStepClick('topBun')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform"
+          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
         >
+          <Sandwich className="w-5 h-5 text-orange-500 rotate-180" />
           Add Top Bun
         </Button>
         <Button 
           variant="outline"
           onClick={() => onStepClick('sausage')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform"
+          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
         >
+          <Pizza className="w-5 h-5 text-orange-500" />
           Add Sausage
         </Button>
         <Button 
           variant="outline"
           onClick={() => onStepClick('toppings')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform"
+          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
         >
+          <Utensils className="w-5 h-5 text-orange-500" />
           Add Toppings
         </Button>
         <Button 
           variant="outline"
           onClick={() => onStepClick('fries')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform"
+          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
         >
+          <French className="w-5 h-5 text-orange-500" />
           Add Fries
         </Button>
         <Button 
           variant="outline"
           onClick={() => onStepClick('salt')}
           disabled={!selectedCustomer}
-          className="hover:scale-105 transition-transform"
+          className="bg-white/80 hover:bg-white hover:scale-105 transition-all flex items-center gap-2 h-14"
         >
+          <Salt className="w-5 h-5 text-orange-500" />
           Add Salt
         </Button>
         <Button 
           onClick={onServe}
           variant="default"
-          className={`col-span-2 transition-all ${
+          className={`col-span-2 h-14 transition-all ${
             selectedCustomer
               ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:scale-105'
               : 'opacity-50 cursor-not-allowed'
