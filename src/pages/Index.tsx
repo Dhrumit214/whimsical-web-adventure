@@ -321,8 +321,14 @@ const Index = () => {
                     <div className="flex items-center gap-4">
                       <CustomerAvatar id={customer.id} patience={customer.patience} />
                       <div className="flex-1">
-                        <AlertTitle className="capitalize flex items-center gap-2">
-                          {DISH_NAMES[customer.dish]}
+                        <AlertTitle className="capitalize flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            {DISH_NAMES[customer.dish]}
+                          </span>
+                          <span className="text-sm font-normal text-green-600 flex items-center gap-1">
+                            <Coins className="w-4 h-4" />
+                            ${customer.reward}
+                          </span>
                         </AlertTitle>
                         <AlertDescription>
                           <Progress 

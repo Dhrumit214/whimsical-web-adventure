@@ -1,9 +1,24 @@
-import { Check } from "lucide-react";
+import { Check, Sandwich, Pizza, Utensils } from "lucide-react";
 
 interface RecipeStepsProps {
   steps: string[];
   completedSteps: string[];
 }
+
+const getStepIcon = (step: string) => {
+  switch (step.toLowerCase()) {
+    case "add bun":
+    case "add top bun":
+      return <Sandwich className="w-4 h-4 text-orange-500" />;
+    case "add patty":
+    case "add fries":
+      return <Pizza className="w-4 h-4 text-orange-500" />;
+    case "add toppings":
+      return <Utensils className="w-4 h-4 text-orange-500" />;
+    default:
+      return null;
+  }
+};
 
 export const RecipeSteps = ({ steps, completedSteps }: RecipeStepsProps) => {
   return (
@@ -26,7 +41,10 @@ export const RecipeSteps = ({ steps, completedSteps }: RecipeStepsProps) => {
                 <span className="text-sm font-medium">{index + 1}</span>
               )}
             </span>
-            <span className="text-sm font-medium">{step}</span>
+            <div className="flex items-center gap-2 flex-1">
+              <span className="text-sm font-medium">{step}</span>
+              {getStepIcon(step)}
+            </div>
           </div>
         ))}
       </div>
