@@ -97,7 +97,6 @@ const INITIAL_GAME_STATE: GameState = {
 const Index = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(INITIAL_GAME_DURATION);
-  const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [currentSteps, setCurrentSteps] = useState<Step[]>([]);
@@ -108,7 +107,6 @@ const Index = () => {
   const startGame = () => {
     setGameStarted(true);
     setTimeLeft(INITIAL_GAME_DURATION);
-    setScore(0);
     setGameState(INITIAL_GAME_STATE);
     setCustomers([]);
     setCurrentSteps([]);
@@ -354,7 +352,6 @@ const Index = () => {
 
   useEffect(() => {
     if (showGameOver) {
-      setScore(0);
       setGameState(INITIAL_GAME_STATE);
       setTimeLeft(INITIAL_GAME_DURATION);
     }
@@ -363,7 +360,7 @@ const Index = () => {
   return (
     <div className="min-h-screen transition-all relative overflow-hidden bg-warm-gradient">
       <GameHeader 
-        score={score} 
+        score={gameState.score} 
         timeLeft={timeLeft} 
         level={gameState.level} 
         money={gameState.money} 
@@ -483,7 +480,7 @@ const Index = () => {
 
       <GameOver 
         show={showGameOver}
-        score={score}
+        score={gameState.score}
         money={gameState.money}
         level={gameState.level}
         onRestart={startGame}
