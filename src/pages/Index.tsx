@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
-import { Users, Award, Check, AlertCircle, Utensils, Pizza, Sandwich, CookingPot, Coins } from "lucide-react";
+import { Users, Award, Check, AlertCircle, Utensils, Pizza, Sandwich, CookingPot, Coins, DollarSign } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
@@ -9,40 +9,77 @@ import { CustomerAvatar } from "@/components/CustomerAvatar";
 import { RecipeSteps } from "@/components/RecipeSteps";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import type { Customer, Dish, Step, GameState } from "../types/game";
+import { UpgradesShop } from "@/components/UpgradesShop";
+import type { Customer, Dish, Step, GameState, MenuItem } from "../types/game";
 
 const GAME_DURATION = 60;
 const MAX_CUSTOMERS = 3;
 const BASE_PATIENCE_DURATION = 15;
 const BASE_REWARD = 10;
 
+const INITIAL_MENU_ITEMS: MenuItem[] = [
+  {
+    id: 'burger',
+    name: 'Basic Burger',
+    price: 12,
+    unlockCost: 0,
+    isUnlocked: true,
+    steps: ['bun', 'patty', 'topBun'],
+    icon: 'burger'
+  },
+  {
+    id: 'fries',
+    name: 'French Fries',
+    price: 5,
+    unlockCost: 0,
+    isUnlocked: true,
+    steps: ['fries', 'salt'],
+    icon: 'fries'
+  },
+  {
+    id: 'hotdog',
+    name: 'Hot Dog',
+    price: 20,
+    unlockCost: 100,
+    isUnlocked: false,
+    steps: ['bun', 'sausage', 'toppings'],
+    icon: 'hotdog'
+  },
+  {
+    id: 'premiumBurger',
+    name: 'Premium Burger',
+    price: 30,
+    unlockCost: 250,
+    isUnlocked: false,
+    steps: ['bun', 'patty', 'toppings', 'topBun'],
+    icon: 'burger'
+  },
+  {
+    id: 'pizza',
+    name: 'Pizza',
+    price: 45,
+    unlockCost: 500,
+    isUnlocked: false,
+    steps: ['bun', 'toppings'],
+    icon: 'pizza'
+  },
+  {
+    id: 'iceCream',
+    name: 'Ice Cream',
+    price: 25,
+    unlockCost: 750,
+    isUnlocked: false,
+    steps: ['toppings'],
+    icon: 'iceCream'
+  }
+];
+
 const INITIAL_GAME_STATE: GameState = {
   level: 1,
   money: 0,
-  unlockedDishes: ['burger'],
-  requiredScore: 50
-};
-
-const DISH_STEPS: Record<Dish, Step[]> = {
-  burger: ['bun', 'patty', 'topBun'],
-  hotdog: ['bun', 'sausage', 'toppings'],
-  fries: ['fries', 'salt']
-};
-
-const DISH_NAMES: Record<Dish, string> = {
-  burger: 'Burger',
-  hotdog: 'Hot Dog',
-  fries: 'Fries'
-};
-
-const STEP_NAMES: Record<Step, string> = {
-  bun: 'Add Bun',
-  patty: 'Add Patty',
-  topBun: 'Add Top Bun',
-  sausage: 'Add Sausage',
-  toppings: 'Add Toppings',
-  fries: 'Add Fries',
-  salt: 'Add Salt'
+  unlockedDishes: ['burger', 'fries'],
+  requiredScore: 50,
+  menuItems: INITIAL_MENU_ITEMS
 };
 
 const Index = () => {
@@ -59,33 +96,29 @@ const Index = () => {
     return Math.max(5, BASE_PATIENCE_DURATION - Math.floor(gameState.level / 2));
   }, [gameState.level]);
 
-  const calculateReward = useCallback((patience: number) => {
-    const baseReward = BASE_REWARD * gameState.level;
-    const patienceBonus = Math.floor(patience * 2);
-    return baseReward + patienceBonus;
-  }, [gameState.level]);
-
   const generateCustomer = useCallback(() => {
-    const availableDishes = gameState.unlockedDishes;
+    const availableDishes = gameState.menuItems
+      .filter(item => item.isUnlocked)
+      .map(item => item.id);
     const randomDish = availableDishes[Math.floor(Math.random() * availableDishes.length)];
+    const menuItem = gameState.menuItems.find(item => item.id === randomDish)!;
     const patience = calculatePatience();
-    const reward = calculateReward(patience);
     
     const newCustomer = {
       id: Date.now(),
       dish: randomDish,
       patience,
-      steps: DISH_STEPS[randomDish],
-      reward
+      steps: menuItem.steps,
+      reward: menuItem.price
     };
     
     toast.success('New customer arrived!', {
-      description: `Order: ${DISH_NAMES[randomDish]} (${reward}$)`,
+      description: `Order: ${menuItem.name} ($${menuItem.price})`,
       icon: <Users className="w-4 h-4" />,
     });
     
     return newCustomer;
-  }, [gameState.unlockedDishes, calculatePatience, calculateReward]);
+  }, [gameState.menuItems, calculatePatience]);
 
   const checkLevelUp = useCallback(() => {
     if (score >= gameState.requiredScore) {
@@ -182,7 +215,7 @@ const Index = () => {
     } else {
       setSelectedCustomer(customer);
       setCurrentSteps([]);
-      toast.info(`Selected customer's order: ${DISH_NAMES[customer.dish]}`);
+      toast.info(`Selected customer's order: ${customer.dish}`);
     }
   };
 
@@ -192,10 +225,10 @@ const Index = () => {
       return;
     }
 
-    const expectedStep = DISH_STEPS[selectedCustomer.dish][currentSteps.length];
+    const expectedStep = gameState.menuItems.find(item => item.id === selectedCustomer.dish)!.steps[currentSteps.length];
     if (step === expectedStep) {
       setCurrentSteps((prev) => [...prev, step]);
-      toast.success(`Added ${STEP_NAMES[step]}!`, {
+      toast.success(`Added ${step}!`, {
         icon: <Check className="w-4 h-4" />
       });
     } else {
@@ -211,9 +244,10 @@ const Index = () => {
       return;
     }
 
-    const isCorrect = JSON.stringify(currentSteps) === JSON.stringify(DISH_STEPS[selectedCustomer.dish]);
+    const isCorrect = JSON.stringify(currentSteps) === JSON.stringify(selectedCustomer.steps);
     if (isCorrect) {
-      const reward = selectedCustomer.reward;
+      const menuItem = gameState.menuItems.find(item => item.id === selectedCustomer.dish)!;
+      const reward = menuItem.price;
       setScore((prev) => prev + 10);
       setGameState(prev => ({
         ...prev,
@@ -244,37 +278,38 @@ const Index = () => {
     setShowGameOver(false);
   };
 
+  const handleUnlockItem = (itemId: string) => {
+    setGameState(prev => {
+      const updatedMenuItems = prev.menuItems.map(item => {
+        if (item.id === itemId) {
+          return {
+            ...item,
+            isUnlocked: true
+          };
+        }
+        return item;
+      });
+
+      const itemToUnlock = prev.menuItems.find(item => item.id === itemId)!;
+      
+      return {
+        ...prev,
+        money: prev.money - itemToUnlock.unlockCost,
+        menuItems: updatedMenuItems,
+        unlockedDishes: [...prev.unlockedDishes, itemId as Dish]
+      };
+    });
+  };
+
   return (
     <div className="min-h-screen transition-all relative overflow-hidden bg-warm-gradient">
-      {/* Ambient Background Elements */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
-      
-      {/* Food Truck Illustration */}
-      <div className="absolute top-20 right-10 w-96 h-64 bg-white/90 rounded-xl shadow-2xl transform -rotate-3 overflow-hidden">
-        <div className="absolute inset-0 bg-food-truck opacity-20" />
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-orange-500/20" />
-        <div className="absolute top-4 left-4 flex space-x-4">
-          <CookingPot className="w-8 h-8 text-orange-500 animate-bounce" />
-          <Pizza className="w-8 h-8 text-orange-500 animate-pulse" />
-          <Sandwich className="w-8 h-8 text-orange-500 animate-bounce" />
-        </div>
-      </div>
-      
-      {/* Floating Clouds */}
-      <div className="absolute top-10 left-10 w-20 h-10 bg-white rounded-full opacity-20 animate-float" />
-      <div className="absolute top-20 right-20 w-16 h-8 bg-white rounded-full opacity-20 animate-float-delayed" />
-      
-      {/* Flying Birds */}
-      <div className="absolute top-40 left-0 w-4 h-4 text-gray-400 animate-bird">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-        </svg>
-      </div>
-      
-      {/* City Skyline */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-200/20 to-transparent" />
-
-      <GameHeader score={score} timeLeft={timeLeft} level={gameState.level} money={gameState.money} requiredScore={gameState.requiredScore} />
+      <GameHeader 
+        score={score} 
+        timeLeft={timeLeft} 
+        level={gameState.level} 
+        money={gameState.money} 
+        requiredScore={gameState.requiredScore} 
+      />
 
       <main className="pt-20 p-4 max-w-7xl mx-auto relative">
         {!gameStarted && !showGameOver && (
@@ -284,29 +319,18 @@ const Index = () => {
         {gameStarted && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Customers
-              </h2>
-              
-              {/* Ingredient Icons Display */}
-              <div className="mb-6 p-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg">
-                <div className="flex justify-center space-x-4">
-                  <div className="flex flex-col items-center">
-                    <Pizza className="w-8 h-8 text-orange-500" />
-                    <span className="text-sm mt-1">Patty</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Sandwich className="w-8 h-8 text-orange-500" />
-                    <span className="text-sm mt-1">Bun</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Utensils className="w-8 h-8 text-orange-500" />
-                    <span className="text-sm mt-1">Toppings</span>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Customers
+                </h2>
+                <UpgradesShop
+                  money={gameState.money}
+                  menuItems={gameState.menuItems}
+                  onUnlockItem={handleUnlockItem}
+                />
               </div>
-
+              
               {customers.map((customer) => (
                 <div
                   key={customer.id}
@@ -323,7 +347,7 @@ const Index = () => {
                       <div className="flex-1">
                         <AlertTitle className="capitalize flex items-center justify-between">
                           <span className="flex items-center gap-2">
-                            {DISH_NAMES[customer.dish]}
+                            {customer.dish}
                           </span>
                           <span className="text-sm font-normal text-green-600 flex items-center gap-1">
                             <Coins className="w-4 h-4" />
@@ -343,8 +367,8 @@ const Index = () => {
                     {selectedCustomer?.id === customer.id && (
                       <div className="mt-4 animate-fade-in">
                         <RecipeSteps
-                          steps={DISH_STEPS[customer.dish].map(step => STEP_NAMES[step])}
-                          completedSteps={currentSteps.map(step => STEP_NAMES[step])}
+                          steps={gameState.menuItems.find(item => item.id === customer.dish)!.steps}
+                          completedSteps={currentSteps}
                         />
                       </div>
                     )}
@@ -358,7 +382,7 @@ const Index = () => {
               currentSteps={currentSteps}
               onStepClick={handleStep}
               onServe={handleServe}
-              stepNames={STEP_NAMES}
+              stepNames={{ bun: 'Add Bun', patty: 'Add Patty', topBun: 'Add Top Bun', sausage: 'Add Sausage', toppings: 'Add Toppings', fries: 'Add Fries', salt: 'Add Salt' }}
             />
           </div>
         )}

@@ -1,5 +1,15 @@
-export type Dish = 'burger' | 'hotdog' | 'fries';
+export type Dish = 'burger' | 'hotdog' | 'fries' | 'premiumBurger' | 'pizza' | 'iceCream';
 export type Step = 'bun' | 'patty' | 'topBun' | 'sausage' | 'toppings' | 'fries' | 'salt';
+
+export interface MenuItem {
+  id: Dish;
+  name: string;
+  price: number;
+  unlockCost: number;
+  isUnlocked: boolean;
+  steps: Step[];
+  icon: string;
+}
 
 export interface Customer {
   id: number;
@@ -14,4 +24,5 @@ export interface GameState {
   money: number;
   unlockedDishes: Dish[];
   requiredScore: number;
+  menuItems: MenuItem[];
 }
