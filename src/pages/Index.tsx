@@ -129,6 +129,19 @@ const Index = () => {
     setGameHistory(prev => [historyEntry, ...prev]);
   };
 
+  const handleUnlockItem = (itemId: string) => {
+    if (gameState.money >= gameState.menuItems.find(item => item.id === itemId)?.unlockCost!) {
+      setGameState(prev => ({
+        ...prev,
+        money: prev.money - prev.menuItems.find(item => item.id === itemId)?.unlockCost!,
+        menuItems: prev.menuItems.map(item =>
+          item.id === itemId ? { ...item, isUnlocked: true } : item
+        ),
+        unlockedDishes: [...prev.unlockedDishes, itemId as Dish]
+      }));
+    }
+  };
+
   const handleServe = () => {
     if (!selectedCustomer) return;
 
