@@ -263,125 +263,34 @@ const Index = () => {
     }
 
     const expectedStep = gameState.menuItems.find(item => item.id === selectedCustomer.dish)!.steps[currentSteps.length];
+    const buttonElement = document.activeElement as HTMLButtonElement;
+    
     if (step === expectedStep) {
       setCurrentSteps((prev) => [...prev, step]);
       toast.success(`Added ${step}!`, {
         icon: <Check className="w-4 h-4" />
       });
     } else {
+      // Add shake animation and red background
+      buttonElement?.classList.add('animate-shake', 'bg-red-100');
+      setTimeout(() => {
+        buttonElement?.classList.remove('animate-shake', 'bg-red-100');
+      }, 300);
+      
       toast.error("Wrong ingredient! Check the recipe steps.", {
         icon: <AlertCircle className="w-4 h-4" />
       });
     }
   };
 
-  const handleServe = () => {
-    if (!selectedCustomer) {
-      toast.error("Please select a customer first!");
-      return;
+  // Reset game state when showing game over
+  useEffect(() => {
+    if (showGameOver) {
+      setScore(0);
+      setGameState(INITIAL_GAME_STATE);
+      setTimeLeft(INITIAL_GAME_DURATION);
     }
-
-    const isCorrect = JSON.stringify(currentSteps) === JSON.stringify(selectedCustomer.steps);
-    if (isCorrect) {
-      const menuItem = gameState.menuItems.find(item => item.id === selectedCustomer.dish)!;
-      const reward = menuItem.price;
-      setScore((prev) => prev + 10);
-      setGameState(prev => ({
-        ...prev,
-        money: prev.money + reward
-      }));
-      setCustomers((prev) => prev.filter((c) => c.id !== selectedCustomer.id));
-      setSelectedCustomer(null);
-      setCurrentSteps([]);
-      
-      toast.success(`Order completed! Earned $${reward}`, {
-        icon: <Coins className="w-4 h-4" />
-      });
-      
-      checkLevelUp();
-    } else {
-      toast.error("Incomplete or incorrect order!");
-    }
-  };
-
-  const checkLevelUp = useCallback(() => {
-    if (score >= gameState.requiredScore) {
-      const newLevel = gameState.level + 1;
-      const newUnlockedDishes = [...gameState.unlockedDishes];
-      
-      if (newLevel === 2 && !newUnlockedDishes.includes('hotdog')) {
-        newUnlockedDishes.push('hotdog');
-        toast.success('New recipe unlocked: Hot Dog! 🌭');
-      } else if (newLevel === 3 && !newUnlockedDishes.includes('fries')) {
-        newUnlockedDishes.push('fries');
-        toast.success('New recipe unlocked: Fries! 🍟');
-      }
-
-      setGameState(prev => ({
-        ...prev,
-        level: newLevel,
-        unlockedDishes: newUnlockedDishes,
-        requiredScore: prev.requiredScore + (50 * newLevel)
-      }));
-
-      toast.success(`Level Up! Now at level ${newLevel}`, {
-        icon: <Award className="w-4 h-4" />
-      });
-    }
-  }, [score, gameState]);
-
-  const handleGameOver = () => {
-    setGameHistory(prev => {
-      const newHistory = [
-        {
-          id: Date.now(),
-          score,
-          money: gameState.money,
-          level: gameState.level,
-          timestamp: new Date()
-        },
-        ...prev
-      ].slice(0, 10); // Keep only last 10 games
-      return newHistory;
-    });
-    
-    setShowGameOver(true);
-    setGameStarted(false);
-  };
-
-  const startGame = () => {
-    setGameStarted(true);
-    setTimeLeft(INITIAL_GAME_DURATION);
-    setScore(0);
-    setGameState(INITIAL_GAME_STATE);
-    setCustomers([]);
-    setCurrentSteps([]);
-    setSelectedCustomer(null);
-    setShowGameOver(false);
-  };
-
-  const handleUnlockItem = (itemId: string) => {
-    setGameState(prev => {
-      const updatedMenuItems = prev.menuItems.map(item => {
-        if (item.id === itemId) {
-          return {
-            ...item,
-            isUnlocked: true
-          };
-        }
-        return item;
-      });
-
-      const itemToUnlock = prev.menuItems.find(item => item.id === itemId)!;
-      
-      return {
-        ...prev,
-        money: prev.money - itemToUnlock.unlockCost,
-        menuItems: updatedMenuItems,
-        unlockedDishes: [...prev.unlockedDishes, itemId as Dish]
-      };
-    });
-  };
+  }, [showGameOver]);
 
   return (
     <div className="min-h-screen transition-all relative overflow-hidden bg-warm-gradient">
@@ -394,12 +303,12 @@ const Index = () => {
         onPurchaseTime={purchaseTime}
       />
 
-      <main className="pt-20 p-4 max-w-7xl mx-auto relative">
+      <main className="pt-28 p-4 max-w-7xl mx-auto relative"> {/* Increased top padding */}
         {!gameStarted && !showGameOver && (
           <>
             <GameStart onStart={startGame} />
-            <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div className="max-w-4xl mx-auto -mt-8"> {/* Negative margin to reduce space */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                 <div className="p-6 rounded-lg bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
                   <Utensils className="w-8 h-8 text-orange-500 mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Serve Customers</h3>
@@ -424,7 +333,7 @@ const Index = () => {
         {gameStarted && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
             <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                   <Users className="w-5 h-5" />
                   Customers
@@ -448,7 +357,6 @@ const Index = () => {
                   />
                 </div>
               </div>
-              
               {customers.map((customer) => (
                 <div
                   key={customer.id}
@@ -494,7 +402,6 @@ const Index = () => {
                 </div>
               ))}
             </div>
-
             <PrepStation
               selectedCustomer={selectedCustomer}
               currentSteps={currentSteps}
