@@ -88,6 +88,7 @@ const INITIAL_MENU_ITEMS: MenuItem[] = [
 const INITIAL_GAME_STATE: GameState = {
   level: 1,
   money: 0,
+  score: 0,
   unlockedDishes: ['burger', 'fries'],
   requiredScore: 50,
   menuItems: INITIAL_MENU_ITEMS
@@ -121,7 +122,7 @@ const Index = () => {
     
     const historyEntry: GameHistoryEntry = {
       id: Date.now(),
-      score,
+      score: gameState.score,
       money: gameState.money,
       level: gameState.level,
       timestamp: new Date()
@@ -154,12 +155,13 @@ const Index = () => {
       currentSteps.every((step, index) => step === expectedSteps[index]);
 
     if (isCorrectOrder) {
-      setScore(prev => prev + 10);
+      const newScore = gameState.score + 10;
       setGameState(prev => ({
         ...prev,
+        score: newScore,
         money: prev.money + selectedCustomer.reward,
-        level: prev.score >= prev.requiredScore ? prev.level + 1 : prev.level,
-        requiredScore: prev.score >= prev.requiredScore ? prev.requiredScore * 1.5 : prev.requiredScore
+        level: newScore >= prev.requiredScore ? prev.level + 1 : prev.level,
+        requiredScore: newScore >= prev.requiredScore ? prev.requiredScore * 1.5 : prev.requiredScore
       }));
 
       setCustomers(prev => prev.filter(c => c.id !== selectedCustomer.id));

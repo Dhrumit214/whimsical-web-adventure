@@ -22,6 +22,7 @@ export interface Customer {
 export interface GameState {
   level: number;
   money: number;
+  score: number;
   unlockedDishes: Dish[];
   requiredScore: number;
   menuItems: MenuItem[];
