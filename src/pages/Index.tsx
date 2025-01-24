@@ -1,22 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Timer, Utensils, ChefHat, Trophy, Check, AlertCircle, Clock, Star, Users, Award } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { Users, Award, Check, AlertCircle } from "lucide-react";
+import { GameHeader } from "@/components/GameHeader";
+import { GameStart } from "@/components/GameStart";
+import { GameOver } from "@/components/GameOver";
+import { PrepStation } from "@/components/PrepStation";
 import { CustomerAvatar } from "@/components/CustomerAvatar";
 import { RecipeSteps } from "@/components/RecipeSteps";
-
-type Dish = 'burger' | 'hotdog' | 'fries';
-type Step = 'bun' | 'patty' | 'topBun' | 'sausage' | 'toppings' | 'fries' | 'salt';
-
-interface Customer {
-  id: number;
-  dish: Dish;
-  patience: number;
-  steps: Step[];
-}
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import type { Customer, Dish, Step } from "../types/game";
 
 const GAME_DURATION = 60;
 const MAX_CUSTOMERS = 3;
@@ -194,44 +187,25 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 transition-all relative overflow-hidden">
-      {/* Background Pattern */}
+    <div className="min-h-screen transition-all relative overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50">
+      {/* Ambient Background Elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
       
       {/* Food Truck Illustration */}
       <div className="absolute top-20 right-0 w-64 h-64 bg-food-truck opacity-10 transform rotate-12" />
+      
+      {/* Floating Clouds */}
+      <div className="absolute top-10 left-10 w-20 h-10 bg-white rounded-full opacity-20 animate-float" />
+      <div className="absolute top-20 right-20 w-16 h-8 bg-white rounded-full opacity-20 animate-float-delayed" />
+      
+      {/* City Skyline */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-200/20 to-transparent" />
 
-      <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm shadow-sm p-4 z-10 animate-fade-in">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2 hover:scale-105 transition-transform">
-            <Trophy className="w-6 h-6 text-yellow-500 animate-bounce" />
-            <span className="text-xl font-bold text-gray-800">Score: {score}</span>
-          </div>
-          <div className="flex items-center gap-2 hover:scale-105 transition-transform">
-            <Timer className="w-6 h-6 text-blue-500 animate-pulse" />
-            <span className="text-xl font-bold text-gray-800">{timeLeft}s</span>
-          </div>
-        </div>
-      </header>
+      <GameHeader score={score} timeLeft={timeLeft} />
 
       <main className="pt-20 p-4 max-w-7xl mx-auto">
         {!gameStarted && !showGameOver && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 animate-fade-in">
-            <div className="text-center space-y-4">
-              <ChefHat className="w-16 h-16 mx-auto text-orange-500 animate-bounce" />
-              <h1 className="text-4xl font-bold text-gray-800 mb-2">Food Truck Frenzy</h1>
-              <p className="text-gray-600 max-w-md mx-auto">
-                Serve as many customers as you can in 60 seconds!
-              </p>
-            </div>
-            <Button 
-              size="lg"
-              onClick={startGame}
-              className="text-lg px-8 hover:scale-110 transition-transform bg-gradient-to-r from-orange-500 to-amber-500 shadow-lg"
-            >
-              Start Game
-            </Button>
-          </div>
+          <GameStart onStart={startGame} />
         )}
 
         {gameStarted && (
@@ -257,27 +231,17 @@ const Index = () => {
                       <div className="flex-1">
                         <AlertTitle className="capitalize flex items-center gap-2">
                           {DISH_NAMES[customer.dish]}
-                          {selectedCustomer?.id === customer.id && (
-                            <Star className="w-4 h-4 text-yellow-500 animate-pulse" />
-                          )}
                         </AlertTitle>
                         <AlertDescription>
-                          <div className="mt-2">
-                            <Progress 
-                              value={(customer.patience / PATIENCE_DURATION) * 100} 
-                              className={`h-2 transition-all ${
-                                customer.patience < 5 ? 'bg-red-200' : ''
-                              }`}
-                            />
-                            <span className="text-sm text-gray-500 mt-1 block flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {customer.patience}s
-                            </span>
-                          </div>
+                          <Progress 
+                            value={(customer.patience / PATIENCE_DURATION) * 100} 
+                            className={`h-2 transition-all ${
+                              customer.patience < 5 ? 'bg-red-200' : ''
+                            }`}
+                          />
                         </AlertDescription>
                       </div>
                     </div>
-                    {/* Recipe Steps for Selected Customer */}
                     {selectedCustomer?.id === customer.id && (
                       <div className="mt-4 animate-fade-in">
                         <RecipeSteps
@@ -291,131 +255,23 @@ const Index = () => {
               ))}
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-                <ChefHat className="w-5 h-5" />
-                Prep Station
-              </h2>
-              
-              <div className="bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg mb-6 animate-fade-in">
-                <h3 className="text-sm font-medium text-gray-600 mb-4">Current Order</h3>
-                {selectedCustomer ? (
-                  <div className="space-y-4">
-                    <div className="text-lg font-medium text-gray-800 flex items-center gap-2">
-                      <Utensils className="w-5 h-5 text-orange-500" />
-                      Preparing: {DISH_NAMES[selectedCustomer.dish]}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {currentSteps.map((step, index) => (
-                        <span 
-                          key={index}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 animate-scale-in"
-                        >
-                          <Check className="w-4 h-4 mr-1" />
-                          {STEP_NAMES[step]}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-500 italic flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    Select a customer to start preparing their order
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Button 
-                  variant="outline"
-                  onClick={() => handleStep('bun')}
-                  disabled={!selectedCustomer}
-                >
-                  Add Bun
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => handleStep('patty')}
-                  disabled={!selectedCustomer}
-                >
-                  Add Patty
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => handleStep('topBun')}
-                  disabled={!selectedCustomer}
-                >
-                  Add Top Bun
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => handleStep('sausage')}
-                  disabled={!selectedCustomer}
-                >
-                  Add Sausage
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => handleStep('toppings')}
-                  disabled={!selectedCustomer}
-                >
-                  Add Toppings
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => handleStep('fries')}
-                  disabled={!selectedCustomer}
-                >
-                  Add Fries
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => handleStep('salt')}
-                  disabled={!selectedCustomer}
-                >
-                  Add Salt
-                </Button>
-                <Button 
-                  onClick={handleServe}
-                  variant="default"
-                  className={`col-span-2 transition-all ${
-                    selectedCustomer
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:scale-105'
-                      : 'opacity-50 cursor-not-allowed'
-                  }`}
-                  disabled={!selectedCustomer}
-                >
-                  <Check className="w-5 h-5" />
-                  Serve Order
-                </Button>
-              </div>
-            </div>
+            <PrepStation
+              selectedCustomer={selectedCustomer}
+              currentSteps={currentSteps}
+              onStepClick={handleStep}
+              onServe={handleServe}
+              stepNames={STEP_NAMES}
+            />
           </div>
         )}
       </main>
 
-      <Dialog open={showGameOver} onOpenChange={setShowGameOver}>
-        <DialogContent className="sm:max-w-md animate-scale-in">
-          <DialogHeader>
-            <DialogTitle className="text-center text-2xl font-bold">Game Over!</DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-8">
-            <Trophy className="w-16 h-16 mx-auto text-yellow-500 mb-6 animate-bounce" />
-            <p className="text-3xl font-bold mb-2 text-gray-800">Final Score: {score}</p>
-            <p className="text-gray-600 text-lg">
-              You served {score / 10} orders successfully!
-            </p>
-          </div>
-          <DialogFooter>
-            <Button 
-              onClick={startGame} 
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:scale-105 transition-transform text-lg font-medium"
-            >
-              Play Again
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <GameOver 
+        show={showGameOver}
+        score={score}
+        onRestart={startGame}
+        onOpenChange={setShowGameOver}
+      />
     </div>
   );
 };
