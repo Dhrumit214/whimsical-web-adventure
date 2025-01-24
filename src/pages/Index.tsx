@@ -388,7 +388,7 @@ const Index = () => {
             requiredScore={gameState.requiredScore}
             onPurchaseTime={purchaseTime}
           />
-          <main className="pt-8 p-4 max-w-7xl mx-auto relative">
+          <main className="pt-32 p-4 max-w-7xl mx-auto relative">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
