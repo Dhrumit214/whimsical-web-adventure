@@ -198,6 +198,13 @@ const Index = () => {
       <div className="absolute top-10 left-10 w-20 h-10 bg-white rounded-full opacity-20 animate-float" />
       <div className="absolute top-20 right-20 w-16 h-8 bg-white rounded-full opacity-20 animate-float-delayed" />
       
+      {/* Flying Birds */}
+      <div className="absolute top-40 left-0 w-4 h-4 text-gray-400 animate-bird">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg>
+      </div>
+      
       {/* City Skyline */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-200/20 to-transparent" />
 
