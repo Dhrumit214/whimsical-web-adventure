@@ -15,6 +15,8 @@ import type { Customer, Dish, Step, GameState, MenuItem } from "../types/game";
 const INITIAL_GAME_DURATION = 120;
 const TIME_PURCHASE_COST = 50;
 const TIME_PURCHASE_AMOUNT = 60;
+const MAX_CUSTOMERS = 3;
+const BASE_PATIENCE_DURATION = 15;
 
 const INITIAL_MENU_ITEMS: MenuItem[] = [
   {
