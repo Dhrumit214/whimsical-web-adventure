@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Timer, Utensils, ChefHat, Trophy } from "lucide-react";
+import { Timer, Utensils, ChefHat, Trophy, Check, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 
 type Dish = 'burger' | 'hotdog' | 'fries';
 type Step = 'bun' | 'patty' | 'topBun' | 'sausage' | 'toppings' | 'fries' | 'salt';
@@ -23,6 +24,22 @@ const DISH_STEPS: Record<Dish, Step[]> = {
   burger: ['bun', 'patty', 'topBun'],
   hotdog: ['bun', 'sausage', 'toppings'],
   fries: ['fries', 'salt']
+};
+
+const DISH_NAMES: Record<Dish, string> = {
+  burger: 'Burger',
+  hotdog: 'Hot Dog',
+  fries: 'Fries'
+};
+
+const STEP_NAMES: Record<Step, string> = {
+  bun: 'Add Bun',
+  patty: 'Add Patty',
+  topBun: 'Add Top Bun',
+  sausage: 'Add Sausage',
+  toppings: 'Add Toppings',
+  fries: 'Add Fries',
+  salt: 'Add Salt'
 };
 
 const Index = () => {
@@ -45,7 +62,6 @@ const Index = () => {
     };
   }, []);
 
-  // Game timer
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -64,7 +80,6 @@ const Index = () => {
     return () => clearInterval(timer);
   }, [gameStarted]);
 
-  // Customer generation
   useEffect(() => {
     if (!gameStarted) return;
 
@@ -80,33 +95,66 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [gameStarted, generateCustomer]);
 
-  // Customer patience
   useEffect(() => {
     if (!gameStarted) return;
 
     const interval = setInterval(() => {
-      setCustomers((prev) => 
-        prev.map((customer) => ({
+      setCustomers((prev) => {
+        const updatedCustomers = prev.map((customer) => ({
           ...customer,
           patience: customer.patience - 1
-        })).filter((customer) => customer.patience > 0)
-      );
+        }));
+        
+        // Find customers that just ran out of patience
+        const leavingCustomers = updatedCustomers.filter(
+          (customer) => customer.patience === 0
+        );
+        
+        if (leavingCustomers.length > 0) {
+          // If selected customer leaves, clear selection and prep area
+          if (selectedCustomer && leavingCustomers.some(c => c.id === selectedCustomer.id)) {
+            setSelectedCustomer(null);
+            setCurrentSteps([]);
+            toast.error("Customer left due to long wait!");
+          }
+        }
+        
+        return updatedCustomers.filter((customer) => customer.patience > 0);
+      });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [gameStarted]);
+  }, [gameStarted, selectedCustomer]);
+
+  const handleCustomerSelect = (customer: Customer) => {
+    if (selectedCustomer?.id === customer.id) {
+      setSelectedCustomer(null);
+      setCurrentSteps([]);
+    } else {
+      setSelectedCustomer(customer);
+      setCurrentSteps([]);
+    }
+  };
 
   const handleStep = (step: Step) => {
-    if (!selectedCustomer) return;
+    if (!selectedCustomer) {
+      toast.error("Please select a customer first!");
+      return;
+    }
 
     const expectedStep = DISH_STEPS[selectedCustomer.dish][currentSteps.length];
     if (step === expectedStep) {
       setCurrentSteps((prev) => [...prev, step]);
+    } else {
+      toast.error("Wrong ingredient! Check the recipe steps.");
     }
   };
 
   const handleServe = () => {
-    if (!selectedCustomer) return;
+    if (!selectedCustomer) {
+      toast.error("Please select a customer first!");
+      return;
+    }
 
     const isCorrect = JSON.stringify(currentSteps) === JSON.stringify(DISH_STEPS[selectedCustomer.dish]);
     if (isCorrect) {
@@ -114,6 +162,9 @@ const Index = () => {
       setCustomers((prev) => prev.filter((c) => c.id !== selectedCustomer.id));
       setSelectedCustomer(null);
       setCurrentSteps([]);
+      toast.success("Order served successfully!");
+    } else {
+      toast.error("Incomplete or incorrect order!");
     }
   };
 
@@ -129,7 +180,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="fixed top-0 left-0 right-0 bg-white shadow-sm p-4 z-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -143,7 +193,6 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Game Area */}
       <main className="pt-20 p-4 max-w-7xl mx-auto">
         {!gameStarted && !showGameOver && (
           <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
@@ -172,7 +221,7 @@ const Index = () => {
               {customers.map((customer) => (
                 <div
                   key={customer.id}
-                  onClick={() => setSelectedCustomer(customer)}
+                  onClick={() => handleCustomerSelect(customer)}
                   className={`cursor-pointer transition-all ${
                     selectedCustomer?.id === customer.id 
                       ? 'ring-2 ring-primary' 
@@ -181,15 +230,46 @@ const Index = () => {
                 >
                   <Alert>
                     <Utensils className="h-4 w-4" />
-                    <AlertTitle className="capitalize">{customer.dish}</AlertTitle>
-                    <AlertDescription className="mt-2">
-                      <Progress 
-                        value={(customer.patience / PATIENCE_DURATION) * 100} 
-                        className="h-2"
-                      />
-                      <span className="text-sm text-gray-500 mt-1 block">
-                        Time left: {customer.patience}s
-                      </span>
+                    <AlertTitle className="capitalize">
+                      {DISH_NAMES[customer.dish]}
+                      {selectedCustomer?.id === customer.id && (
+                        <span className="ml-2 text-green-500">
+                          <Check className="inline-block w-4 h-4" />
+                        </span>
+                      )}
+                    </AlertTitle>
+                    <AlertDescription>
+                      <div className="mt-2">
+                        <Progress 
+                          value={(customer.patience / PATIENCE_DURATION) * 100} 
+                          className="h-2"
+                        />
+                        <span className="text-sm text-gray-500 mt-1 block">
+                          Time left: {customer.patience}s
+                        </span>
+                      </div>
+                      {selectedCustomer?.id === customer.id && (
+                        <div className="mt-2 text-sm">
+                          <div className="font-medium mb-1">Recipe Steps:</div>
+                          {DISH_STEPS[customer.dish].map((step, index) => (
+                            <div 
+                              key={step}
+                              className={`flex items-center gap-2 ${
+                                currentSteps[index] === step 
+                                  ? 'text-green-500' 
+                                  : 'text-gray-600'
+                              }`}
+                            >
+                              {currentSteps[index] === step ? (
+                                <Check className="w-4 h-4" />
+                              ) : (
+                                <span className="w-4 h-4 inline-block" />
+                              )}
+                              {STEP_NAMES[step]}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -199,46 +279,81 @@ const Index = () => {
             {/* Prep Station */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-800 mb-6">Prep Station</h2>
+              
+              {/* Assembly Area */}
+              <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+                <h3 className="text-sm font-medium text-gray-600 mb-2">Current Order</h3>
+                {selectedCustomer ? (
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-800">
+                      Preparing: {DISH_NAMES[selectedCustomer.dish]}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {currentSteps.map((step, index) => (
+                        <span 
+                          key={index}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {STEP_NAMES[step]}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 italic">
+                    Select a customer to start preparing their order
+                  </div>
+                )}
+              </div>
+
+              {/* Ingredient Buttons */}
               <div className="grid grid-cols-2 gap-4">
                 <Button 
                   variant="outline"
                   onClick={() => handleStep('bun')}
+                  disabled={!selectedCustomer}
                 >
                   Add Bun
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={() => handleStep('patty')}
+                  disabled={!selectedCustomer}
                 >
                   Add Patty
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={() => handleStep('topBun')}
+                  disabled={!selectedCustomer}
                 >
                   Add Top Bun
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={() => handleStep('sausage')}
+                  disabled={!selectedCustomer}
                 >
                   Add Sausage
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={() => handleStep('toppings')}
+                  disabled={!selectedCustomer}
                 >
                   Add Toppings
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={() => handleStep('fries')}
+                  disabled={!selectedCustomer}
                 >
                   Add Fries
                 </Button>
                 <Button 
                   variant="outline"
                   onClick={() => handleStep('salt')}
+                  disabled={!selectedCustomer}
                 >
                   Add Salt
                 </Button>
@@ -246,6 +361,7 @@ const Index = () => {
                   onClick={handleServe}
                   variant="default"
                   className="col-span-2 bg-orange-500 hover:bg-orange-600"
+                  disabled={!selectedCustomer}
                 >
                   Serve Order
                 </Button>
