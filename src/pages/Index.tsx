@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
-import { Users, Award, Check, AlertCircle, ChefHat, Utensils, Pizza, Sandwich, CookingPot } from "lucide-react";
+import { Users, Award, Check, AlertCircle, ChefHat, Utensils, Pizza, Sandwich, CookingPot, Coins } from "lucide-react";
 import { GameHeader } from "@/components/GameHeader";
 import { GameStart } from "@/components/GameStart";
 import { GameOver } from "@/components/GameOver";
@@ -466,3 +466,4 @@ const Index = () => {
 };
 
 export default Index;
+
